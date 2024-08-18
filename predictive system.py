@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 
 # loading the saved model
-loaded_model = pickle.load(open(filename, 'rb'))
+loaded_model = pickle.load(open("https://drive.google.com/file/d/10_VFqmZE8sEoS46hSIvVSAD8Fc7z_GBV/view?usp=drive_link", 'rb'))
 
 
 input_data = (5,166,72,19,175,25.8,0.587,51)
