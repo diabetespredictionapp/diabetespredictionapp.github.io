@@ -4,7 +4,7 @@ import streamlit as st
 
 
 # loading the saved model
-loaded_model = pickle.load(open(r"C:\Users\Ganesh B\OneDrive\Desktop\dia_ml\filename", 'rb'))
+loaded_model = pickle.load(open("https://drive.google.com/file/d/10_VFqmZE8sEoS46hSIvVSAD8Fc7z_GBV/view?usp=drive_link", 'rb'))
 
 
 # creating a function for Prediction
