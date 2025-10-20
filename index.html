@@ -83,62 +83,56 @@ import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
 // Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyAHaF5_yrUDx9T92N0lHdJFAUj0fAfAkwE",
-    authDomain: "buildup-702d7.firebaseapp.com",
-    projectId: "buildup-702d7",
-    storageBucket: "buildup-702d7.firebasestorage.app",
-    messagingSenderId: "212714636324",
-    appId: "1:212714636324:web:bba5c1cd7d7735ff1884b1",
-    measurementId: "G-4X71M0FF6W"
-};
-
+const firebaseConfig = { /* your config */ };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Ensure user is logged in anonymously
 let currentUser = null;
-signInAnonymously(auth)
-    .then((userCredential) => { currentUser = userCredential.user; })
-    .catch((error) => { alert("Auth error: " + error.message); });
 
-// Get GPS coordinates
-function getLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject("Geolocation not supported.");
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                });
-            },
-            (error) => { reject("GPS error: " + error.message); },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-    });
-}
+// Ensure anonymous login
+signInAnonymously(auth).catch((error) => {
+    alert("Authentication error: " + error.message);
+});
+
+// Listen for auth state
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        console.log("Authenticated UID:", user.uid);
+    } else {
+        currentUser = null;
+        alert("User not authenticated yet.");
+    }
+});
 
 // Update profile
 document.getElementById("updateProfileBtn").onclick = async function () {
+    if (!currentUser) { 
+        alert("Still signing in. Please wait a few seconds and try again."); 
+        return; 
+    }
+
     const name = document.getElementById("name").value.trim();
     const phone = document.getElementById("phone").value.trim();
     const email = document.getElementById("email").value.trim();
     const address = document.getElementById("address").value.trim();
     const pincode = document.getElementById("pincode").value.trim();
 
-    if (!currentUser) { alert("User not authenticated."); return; }
-
+    // Get GPS coordinates
     let latitude = null, longitude = null;
-    try { 
-        const coords = await getLocation(); 
+    try {
+        const coords = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) reject("Geolocation not supported.");
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve(pos.coords),
+                (err) => reject("GPS error: " + err.message),
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        });
         latitude = coords.latitude;
         longitude = coords.longitude;
-    } catch(err) { alert(err); return; }
+    } catch (err) { alert(err); return; }
 
     try {
         await setDoc(doc(db, "sub-dealer", currentUser.uid, "details", "profile"), {
@@ -146,7 +140,7 @@ document.getElementById("updateProfileBtn").onclick = async function () {
         });
         alert("Profile updated successfully!");
         window.location.href = "profile.html";
-    } catch(err) {
+    } catch (err) {
         alert("Failed to update profile: " + err.message);
     }
 };
